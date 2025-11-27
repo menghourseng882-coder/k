@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Finder Cambodia</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        harvard: '#A51C30', // Harvard Crimson
+                        facebook: '#1877F2', // Facebook Blue
+                        dark: '#1e1e1e',
+                        light: '#f9f9f9'
+                    },
+                    fontFamily: {
+                        sans: ['"Kantumruy Pro"', 'sans-serif'],
+                        serif: ['"Merriweather"', '"Kantumruy Pro"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* GLOBAL FONT RESET - FORCE KANTUMRUY PRO EVERYWHERE */
+        body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, a, div, li, ul {
+            font-family: "Kantumruy Pro", sans-serif !important;
+        }
+        
+        /* HARVARD STYLE OVERRIDE */
+        .harvard-serif {
+            font-family: "Merriweather", "Kantumruy Pro", serif !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #A51C30; 
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .hidden-modal {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased bg-[#f3f3f3]">
+
+    <nav class="bg-black text-white py-4 px-6 fixed w-full top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold harvard-serif tracking-wide uppercase">
+                <span data-translate="brandName">UniFinder KH</span>
+            </div>
+            <div class="flex gap-4 items-center">
+                <button onclick="toggleLanguage()" class="border border-white px-3 py-1 rounded hover:bg-white hover:text-black transition text-sm font-bold">
+                    <span id="lang-btn">KH</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative pt-32 pb-20 bg-harvard text-white text-center px-4">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 harvard-serif leading-tight" data-translate="heroTitle">
+                Find Your Dream University
+            </h1>
+            <p class="text-lg md:text-xl mb-8 opacity-90 font-light" data-translate="heroSubtitle">
+                Discover the best academic institutions in Cambodia based on your skills and passion.
+            </p>
+            
+            <div class="bg-white p-2 rounded shadow-lg max-w-2xl mx-auto flex flex-col md:flex-row gap-2">
+                <input type="text" id="searchInput" placeholder="Search by skill (e.g. IT, Health)..." 
+                    class="flex-grow p-3 text-gray-800 outline-none rounded font-medium placeholder-gray-400" onkeyup="filterUniversities()">
+                <button onclick="filterUniversities()" class="bg-black text-white px-8 py-3 font-bold hover:bg-gray-800 transition" data-translate="searchBtn">
+                    Search
+                </button>
+            </div>
+
+            <div class="mt-8">
+                <button onclick="openQuiz()" class="bg-white text-harvard border-2 border-white px-8 py-3 font-bold hover:bg-black hover:text-white hover:border-black transition rounded-full shadow-lg animate-bounce">
+                    <span data-translate="takeQuiz">Take the Personality Quiz</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-10 px-4 flex flex-col md:flex-row gap-8 relative">
+        
+        <aside class="w-full md:w-1/4 h-fit sticky top-24 z-10">
+            <div class="bg-white p-6 shadow rounded border-t-4 border-harvard">
+                <h3 class="text-xl font-bold mb-4 harvard-serif" data-translate="filterTitle">Filter By</h3>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2" data-translate="locationLabel">Location</label>
+                    <select id="locationFilter" onchange="filterUniversities()" class="w-full p-2 border rounded bg-gray-50 font-medium focus:ring-2 focus:ring-harvard outline-none">
+                        <option value="all" data-translate="allLocations">All Locations</option>
+                        <option value="Phnom Penh" data-translate="phnomPenh">Phnom Penh</option>
+                        <option value="Prey Veng" data-translate="preyVeng">Prey Veng</option>
+                        <option value="Near Me" data-translate="nearMe">📍 Near Me (Simulated)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold mb-2" data-translate="majorLabel">Major/Field</label>
+                    <select id="majorFilter" onchange="filterUniversities()" class="w-full p-2 border rounded bg-gray-50 font-medium focus:ring-2 focus:ring-harvard outline-none">
+                        <option value="all" data-translate="allMajors">All Majors</option>
+                        <option value="Health">Health / Medicine</option>
+                        <option value="Engineering">Engineering / IT</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Business">Business / Management</option>
+                        <option value="Law">Law</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <section class="w-full md:w-3/4">
+            <div id="universityGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            <div id="noResults" class="hidden text-center py-10 text-gray-500 font-medium">
+                <p data-translate="noResults">No universities found matching your criteria.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black text-white text-center py-8 mt-10 border-t-4 border-harvard">
+        <p class="font-light">© 2025 University Finder Cambodia. All Rights Reserved.</p>
+    </footer>
+
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden-modal opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full max-w-3xl mx-4 rounded-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="bg-harvard p-4 flex justify-between items-center text-white">
+                <h2 id="modalTitle" class="text-2xl font-bold harvard-serif">University Name</h2>
+                <button onclick="closeModal()" class="text-3xl hover:text-gray-300">×</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <img id="modalImg" src="" alt="Uni" class="w-full h-48 object-cover rounded mb-6 bg-gray-200">
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 text-harvard" data-translate="about">About</h3>
+                        <p id="modalDesc" class="text-gray-600 mb-4 leading-relaxed text-sm">Description...</p>
+                        
+                        <h3 class="font-bold text-lg mb-2 text-harvard" data-translate="skills">Core Skills</h3>
+                        <div id="modalSkills" class="flex flex-wrap gap-2 mb-4"></div>
+                        
+                        <h3 class="font-bold text-lg mb-2 text-harvard" data-translate="location">Location</h3>
+                        <p id="modalLocation" class="text-gray-700">Phnom Penh</p>
+                        <a id="modalMapLink" href="#" target="_blank" class="text-blue-600 underline text-sm hover:text-blue-800 font-bold" data-translate="viewMap">View on Map</a>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded border border-gray-200 h-fit">
+                        <h3 class="font-bold text-lg mb-2 text-harvard" data-translate="scholarships">Scholarships</h3>
+                        
+                        <div id="scholarshipBadge" class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold mb-3 border border-yellow-300">
+                            Available
+                        </div>
+
+                        <button id="btnScholarship" onclick="toggleScholarships()" class="w-full border border-gray-300 bg-white text-gray-700 font-bold py-2 rounded shadow-sm hover:bg-gray-50 transition mb-2 flex justify-center items-center gap-2">
+                            <span id="btnScholarshipText">▼ Show Scholarships</span>
+                        </button>
+
+                        <div id="scholarshipContainer" class="hidden bg-white border border-gray-200 p-3 rounded mt-2">
+                            <ul id="scholarshipList" class="list-disc pl-5 text-sm text-gray-700 space-y-2 mb-2">
+                                </ul>
+                            <p class="text-xs text-red-600 font-bold" id="scholarshipLimit"></p>
+                        </div>
+
+                        <div class="border-t pt-4 space-y-3 mt-4">
+                            <a id="modalWebLink" href="#" target="_blank" class="block w-full bg-black text-white text-center py-3 rounded hover:bg-gray-800 transition font-bold text-sm">
+                                <span data-translate="visitWebsite">Visit Website</span>
+                            </a>
+
+                            <a id="modalFbLink" href="#" target="_blank" class="block w-full bg-facebook text-white text-center py-3 rounded hover:bg-blue-700 transition font-bold text-sm flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+                                </svg>
+                                <span data-translate="fbPage">Facebook Page</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quizModal" class="fixed inset-0 bg-white z-[60] hidden flex flex-col font-sans">
+        <div class="bg-harvard p-4 text-white flex justify-between items-center">
+            <span class="font-bold text-lg" data-translate="quizTitle">Personality & Major Assessment</span>
+            <button onclick="closeQuiz()" class="text-white font-bold px-4 py-2 hover:bg-white hover:text-harvard rounded transition" data-translate="close">Close</button>
+        </div>
+        
+        <div class="flex-grow flex items-center justify-center p-4">
+            <div class="max-w-2xl w-full bg-gray-50 p-8 rounded-lg shadow-xl border-t-4 border-black">
+                <div id="quizProgressBarContainer" class="mb-6">
+                    <div class="flex justify-between text-sm mb-1 text-gray-500 font-bold">
+                        <span data-translate="progress">Progress</span>
+                        <span id="quizProgressText">1 / 20</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-harvard h-2.5 rounded-full transition-all duration-300" style="width: 5%"></div>
+                    </div>
+                </div>
+
+                <div id="quizContent">
+                    </div>
+
+                <div id="quizFooter" class="flex justify-between mt-8">
+                    <button id="prevBtn" onclick="prevQuestion()" class="px-6 py-2 rounded text-gray-500 hover:bg-gray-200 disabled:opacity-30 font-bold" disabled data-translate="back">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SECTION ---
+        // UPDATED: Added 'location' field to all universities. (បានបន្ថែមទីតាំងទៅគ្រប់សាកលវិទ្យាល័យ)
+        const universities = [
+            // --- NEW UNIVERSITY ADDED --- (បានបន្ថែមសាកលវិទ្យាល័យថ្មី)
+            { id: 11, nameKH: "សាកលវិទ្យាល័យជាតិ ជា ស៊ីម កំចាយមារ", nameEN: "National University of CheaSim KamChaymear (NUCiK)", link: "https://web.facebook.com/nuck.edu.kh", website: "https://nuck.edu.kh", skillsEN: "Agriculture, Management, Education, Rural Development", skillsKH: "កសិកម្ម, គ្រប់គ្រង, អប់រំ, អភិវឌ្ឍន៍ជនបទ", category: "Agriculture", img: "nuck.png", limit: "100 Students", scholarship: "Regional Government Stipends Available", location: "Prey Veng" },
+            { id: 1, nameKH: "សាកលវិទ្យាល័យវិទ្យាសាស្ត្រសុខាភិបាល", nameEN: "University of Health Sciences", link: "https://www.facebook.com/uhs.edu.kh", website: "https://www.uhs.edu.kh", skillsEN: "Health, Medicine, Pharmacy, Dentistry", skillsKH: "សុខាភិបាល, វេជ្ជសាស្ត្រ, ឱសថសាស្ត្រ, ទន្តសាស្ត្រ", category: "Health", img: "hus.jpg", limit: "50 Students", scholarship: "100% for Grade A, 50% for Grade B", location: "Phnom Penh" },
+            { id: 2, nameKH: "សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ", nameEN: "Royal University of Phnom Penh (RUPP)", link: "https://web.facebook.com/rupp.edu.kh", website: "http://www.rupp.edu.kh", skillsEN: "Science, Social Science, Languages, IT", skillsKH: "វិទ្យាសាស្ត្រ, សង្គមសាស្ត្រ, ភាសា, ព័ត៌មានវិទ្យា", category: "Engineering", img: "rupp.png", limit: "150 Students", scholarship: "Priority for Poor Students (100%)", location: "Phnom Penh" },
+            { id: 3, nameKH: "វិទ្យាស្ថានបច្ចេកវិទ្យាកម្ពុជា", nameEN: "Institute of Technology of Cambodia (ITC)", link: "https://web.facebook.com/itckh", website: "https://itc.edu.kh", skillsEN: "Engineering, Technology, Civil, Electrical", skillsKH: "វិស្វកម្ម, បច្ចេកវិទ្យា, សំណង់ស៊ីវិល, អគ្គិសនី", category: "Engineering", img: "itc.png", limit: "100 Students", scholarship: "Exam based: Top 50 get 100%", location: "Phnom Penh" },
+            { id: 4, nameKH: "សាកលវិទ្យាល័យភូមិន្ទកសិកម្ម", nameEN: "Royal University of Agriculture (RUA)", link: "https://web.facebook.com/RUAOffial", website: "http://www.rua.edu.kh", skillsEN: "Agriculture, Rural Development, Food Science", skillsKH: "កសិកម្ម, អភិវឌ្ឍន៍ជនបទ, វិទ្យាសាស្ត្រចំណីអាហារ", category: "Agriculture", img: "rua.jpg", limit: "80 Students", scholarship: "Ministry Scholarship Available", location: "Phnom Penh" },
+            { id: 5, nameKH: "សាកលវិទ្យាល័យពុទ្ធិសាស្ត្រ", nameEN: "University of Puthisastra", link: "https://web.facebook.com/UniversityofPuthisastra", website: "https://www.puthisastra.edu.kh", skillsEN: "Health, Dentistry, Business, IT", skillsKH: "សុខាភិបាល, ទន្តសាស្ត្រ, ធុរកិច្ច, ព័ត៌មានវិទ្យា", category: "Health", img: "up.png", limit: "30 Students", scholarship: "Talent Scholarship up to 75%", location: "Phnom Penh" },
+            { id: 6, nameKH: "សាកលវិទ្យាល័យអន្តរជាតិ", nameEN: "International University (IU)", link: "https://web.facebook.com/iuinternationaluniversity", website: "https://www.iu.edu.kh", skillsEN: "Health, Medicine, Nursing", skillsKH: "សុខាភិបាល, វេជ្ជសាស្ត្រ, ថែទាំវេជ្ជសាស្ត្រ", category: "Health", img: "ui.png", limit: "40 Students", scholarship: "Internal Exam Required", location: "Phnom Penh" },
+            { id: 7, nameKH: "សាកលវិទ្យាល័យជាតិគ្រប់គ្រង", nameEN: "National University of Management (NUM)", link: "https://www.facebook.com/num.edu.kh", website: "https://num.edu.kh", skillsEN: "Management, Business, Economics, Tourism", skillsKH: "គ្រប់គ្រង, ធុរកិច្ច, សេដ្ឋកិច្ច, ទេសចរណ៍", category: "Business", img: "num.png", limit: "200 Students", scholarship: "Academic Excellence Awards", location: "Phnom Penh" },
+            { id: 8, nameKH: "វិទ្យាស្ថានពហុបច្ចេកទេសកម្ពុជា", nameEN: "National Polytechnic Institute of Cambodia (NPIC)", link: "https://www.facebook.com/npic.edu.kh", website: "https://npic.edu.kh", skillsEN: "Technical, Engineering, Electronics, Mechanics", skillsKH: "បច្ចេកទេស, វិស្វកម្ម, អេឡិចត្រូនិក, មេកានិច", category: "Engineering", img: "npic.png", limit: "100 Students", scholarship: "TVET Government Support", location: "Phnom Penh" },
+            { id: 9, nameKH: "សាកលវិទ្យាល័យភូមិន្ទនីតិសាស្ត្រ...", nameEN: "Royal University of Law and Economics (RULE)", link: "https://www.facebook.com/rule.edu.kh", website: "https://rule.edu.kh", skillsEN: "Law, Economics, Public Admin", skillsKH: "នីតិសាស្ត្រ, សេដ្ឋកិច្ច, រដ្ឋបាលសាធារណៈ", category: "Law", img: "rule.png", limit: "120 Students", scholarship: "French Cooperation Scholarship", location: "Phnom Penh" },
+            { id: 10, nameKH: "សាកលវិទ្យាល័យ ន័រតុន", nameEN: "Norton University", link: "https://www.facebook.com/nortonuniversitycambodia", website: "https://norton-u.com", skillsEN: "Architecture, Engineering, IT, English", skillsKH: "ស្ថាបត្យកម្ម, វិស្វកម្ម, ព័ត៌មានវិទ្យា, អង់គ្លេស", category: "Engineering", img: "nt.png", limit: "60 Students", scholarship: "Early Bird Registration 30%", location: "Phnom Penh" },
+            
+        ];
+
+        const translations = {
+            en: {
+                brandName: "UniFinder KH",
+                heroTitle: "Find Your Dream University",
+                heroSubtitle: "Discover the best academic institutions in Cambodia based on your skills and passion.",
+                searchBtn: "Search",
+                takeQuiz: "Take the Personality Quiz",
+                filterTitle: "Filter By",
+                locationLabel: "Location",
+                allLocations: "All Locations",
+                phnomPenh: "Phnom Penh",
+                preyVeng: "Prey Veng", // NEW (ថ្មី)
+                nearMe: "📍 Near Me (Simulated)",
+                majorLabel: "Major/Field",
+                allMajors: "All Majors",
+                noResults: "No universities found matching your criteria.",
+                about: "About",
+                skills: "Core Skills",
+                location: "Location",
+                viewMap: "View on Map",
+                scholarships: "Scholarships",
+                visitWebsite: "Visit Website",
+                fbPage: "Facebook Page",
+                quizTitle: "Personality & Major Assessment",
+                close: "Close",
+                progress: "Progress",
+                yes: "Yes / Like",
+                no: "No / Dislike",
+                back: "Back",
+                resultTitle: "Quiz Result",
+                resultDesc: "Based on your answers, here are the top universities for you:",
+                restart: "Restart Quiz"
+            },
+            kh: {
+                brandName: "យូនីហ្វាញដឺ កម្ពុជា",
+                heroTitle: "ស្វែងរកសាកលវិទ្យាល័យក្នុងក្តីស្រមៃ",
+                heroSubtitle: "ស្វែងរកគ្រឹះស្ថានសិក្សាល្អបំផុតនៅកម្ពុជាដោយផ្អែកលើជំនាញ និងចំណង់ចំណូលចិត្តរបស់អ្នក។",
+                searchBtn: "ស្វែងរក",
+                takeQuiz: "ធ្វើតេស្តបុគ្គលិកលក្ខណៈ",
+                filterTitle: "ជម្រើសស្វែងរក",
+                locationLabel: "ទីតាំង",
+                allLocations: "គ្រប់ទីតាំង",
+                phnomPenh: "ភ្នំពេញ",
+                preyVeng: "ព្រៃវែង", // NEW (ថ្មី)
+                nearMe: "📍 នៅជិតខ្ញុំ (សាកល្បង)",
+                majorLabel: "ជំនាញ/ផ្នែក",
+                allMajors: "គ្រប់ជំនាញ",
+                noResults: "មិនមានសាកលវិទ្យាល័យដែលត្រូវនឹងការស្វែងរកទេ។",
+                about: "អំពីសាលា",
+                skills: "ជំនាញស្នូល",
+                location: "ទីតាំង",
+                viewMap: "មើលផែនទី",
+                scholarships: "អាហារូបករណ៍",
+                visitWebsite: "ចូលទៅកាន់គេហទំព័រ",
+                fbPage: "ផេកហ្វេសប៊ុក",
+                quizTitle: "តេស្តវាយតម្លៃបុគ្គលិកលក្ខណៈ និងជំនាញ",
+                close: "បិទ",
+                progress: "ដំណើរការ",
+                yes: "បាទ/ចាស ឬ ចូលចិត្ត",
+                no: "ទេ ឬ មិនចូលចិត្ត",
+                back: "ថយក្រោយ",
+                resultTitle: "លទ្ធផលតេស្ត",
+                resultDesc: "ផ្អែកលើចម្លើយរបស់អ្នក នេះគឺជាសាកលវិទ្យាល័យដែលសាកសមបំផុត៖",
+                restart: "ធ្វើតេស្តម្តងទៀត"
+            }
+        };
+
+        const quizQuestions = [
+            { qEn: "Do you enjoy helping sick people?", qKh: "តើអ្នកចូលចិត្តជួយមើលថែអ្នកជំងឺដែរឬទេ?", cat: "Health" },
+            { qEn: "Are you interested in how machines work?", qKh: "តើអ្នកចាប់អារម្មណ៍ពីរបៀបដែលម៉ាស៊ីនដំណើរការដែរឬទេ?", cat: "Engineering" },
+            { qEn: "Do you like growing plants or animals?", qKh: "តើអ្នកចូលចិត្តដាំដំណាំ ឬចិញ្ចឹមសត្វដែរឬទេ?", cat: "Agriculture" },
+            { qEn: "Do you enjoy leading a team?", qKh: "តើអ្នកចូលចិត្តដឹកនាំក្រុមដែរឬទេ?", cat: "Business" },
+            { qEn: "Do you like debating and defending arguments?", qKh: "តើអ្នកចូលចិត្តការជជែកដេញដោល និងការពារមតិដែរឬទេ?", cat: "Law" },
+            { qEn: "Are you good at biology and chemistry?", qKh: "តើអ្នកពូកែមុខវិជ្ជាជីវវិទ្យា និងគីមីវិទ្យាដែរឬទេ?", cat: "Health" },
+            { qEn: "Do you like coding or computers?", qKh: "តើអ្នកចូលចិត្តសរសេរកូដ ឬប្រើកុំព្យូទ័រដែរឬទេ?", cat: "Engineering" },
+            { qEn: "Do you care about the environment and rural life?", qKh: "តើអ្នកខ្វល់ខ្វាយពីបរិស្ថាន និងជីវភាពជនបទដែរឬទេ?", cat: "Agriculture" },
+            { qEn: "Do you want to start your own company?", qKh: "តើអ្នកចង់បង្កើតក្រុមហ៊ុនផ្ទាល់ខ្លួនដែរឬទេ?", cat: "Business" },
+            { qEn: "Do you care about justice and rules?", qKh: "តើអ្នកឱ្យតម្លៃលើភាពយុត្តិធម៌ និងច្បាប់ទម្លាប់ដែរឬទេ?", cat: "Law" },
+            { qEn: "Are you not afraid of blood?", qKh: "តើអ្នកមិនខ្លាចឈាមទេមែនទេ?", cat: "Health" },
+            { qEn: "Do you like solving math problems?", qKh: "តើអ្នកចូលចិត្តដោះស្រាយលំហាត់គណិតវិទ្យាដែរឬទេ?", cat: "Engineering" },
+            { qEn: "Do you like working outdoors?", qKh: "តើអ្នកចូលចិត្តធ្វើការនៅទីវាលដែរឬទេ?", cat: "Agriculture" },
+            { qEn: "Are you good at managing money?", qKh: "តើអ្នកពូកែគ្រប់គ្រងលុយកាក់ដែរឬទេ?", cat: "Business" },
+            { qEn: "Do you read a lot of books about history/politics?", qKh: "តើអ្នកអានសៀវភៅច្រើនអំពីប្រវត្តិសាស្ត្រ/នយោបាយមែនទេ?", cat: "Law" },
+            { qEn: "Do you want to work in a hospital?", qKh: "តើអ្នកចង់ធ្វើការនៅក្នុងមន្ទីរពេទ្យដែរឬទេ?", cat: "Health" },
+            { qEn: "Do you like building things?", qKh: "តើអ្នកចូលចិត្តសាងសង់របស់ផ្សេងៗដែរឬទេ?", cat: "Engineering" },
+            { qEn: "Are you interested in food production?", qKh: "តើអ្នកចាប់អារម្មណ៍លើផលិតកម្មចំណីអាហារដែរឬទេ?", cat: "Agriculture" },
+            { qEn: "Do you like marketing and selling things?", qKh: "តើអ្នកចូលចិត្តទីផ្សារ និងការលក់ដូរដែរឬទេ?", cat: "Business" },
+            { qEn: "Do you want to be a judge or lawyer?", qKh: "តើអ្នកចង់ក្លាយជាចៅក្រម ឬមេធាវីដែរឬទេ?", cat: "Law" }
+        ];
+
+        // --- STATE VARIABLES ---
+        let currentLang = 'en';
+        let currentQuizIndex = 0;
+        let quizScores = { Health: 0, Engineering: 0, Agriculture: 0, Business: 0, Law: 0 };
+        let quizHistory = [];
+
+        // --- DOM ELEMENTS ---
+        const grid = document.getElementById('universityGrid');
+        const modal = document.getElementById('detailModal');
+        const quizModal = document.getElementById('quizModal');
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            renderUniversities(universities);
+        };
+
+        // --- CORE FUNCTIONS ---
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'kh' : 'en';
+            document.getElementById('lang-btn').textContent = currentLang === 'en' ? 'KH' : 'EN';
+            
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if(translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+
+            filterUniversities(); 
+            if(!quizModal.classList.contains('hidden')) {
+                if (currentQuizIndex < 20) {
+                     if(document.getElementById('questionText')) {
+                        renderQuestion();
+                     }
+                } else {
+                     showQuizResult();
+                }
+            }
+            
+            // Update Scholarship Button Text
+            const btnText = document.getElementById('btnScholarshipText');
+            if(btnText) {
+                 const isHidden = document.getElementById('scholarshipContainer').classList.contains('hidden');
+                 if(isHidden) {
+                     btnText.textContent = currentLang === 'kh' ? '▼ បង្ហាញអាហារូបករណ៍' : '▼ Show Scholarships';
+                 } else {
+                     btnText.textContent = currentLang === 'kh' ? '▲ បិទអាហារូបករណ៍' : '▲ Hide Scholarships';
+                 }
+            }
+        }
+
+        function renderUniversities(list) {
+            grid.innerHTML = '';
+            const noRes = document.getElementById('noResults');
+            
+            if (list.length === 0) {
+                noRes.classList.remove('hidden');
+                return;
+            } else {
+                noRes.classList.add('hidden');
+            }
+
+            list.forEach(uni => {
+                const name = currentLang === 'kh' ? uni.nameKH : uni.nameEN;
+                const skills = currentLang === 'kh' ? uni.skillsKH : uni.skillsEN;
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden border border-gray-100 flex flex-col";
+                card.innerHTML = `
+                    <div class="h-40 bg-gray-200 overflow-hidden relative group">
+                        <img src="${uni.img}" alt="${uni.nameEN}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute bottom-0 left-0 bg-harvard text-white text-xs px-2 py-1 font-bold">${uni.category}</div>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold mb-2 h-14 overflow-hidden text-harvard harvard-serif">${name}</h3>
+                            <p class="text-sm text-gray-500 mb-1 font-bold">📍 ${uni.location}</p>
+                            <p class="text-sm text-gray-600 truncate">🎓 ${skills}</p>
+                        </div>
+                        <button onclick="openModal(${uni.id})" class="mt-4 w-full border border-black text-black py-2 rounded hover:bg-black hover:text-white transition uppercase text-sm font-bold tracking-wider">
+                            ${currentLang === 'kh' ? 'មើលលម្អិត' : 'View Details'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterUniversities() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const location = document.getElementById('locationFilter').value;
+            const major = document.getElementById('majorFilter').value;
+
+            let list = [...universities];
+            if(location === "Near Me") {
+                alert(currentLang === 'en' ? "Simulating GPS: Sorting by closest to your IP..." : "កំពុងដំណើរការ GPS: រៀបចំតាមទីតាំងដែលជិតអ្នកបំផុត...");
+                list.sort(() => Math.random() - 0.5); 
+            }
+
+            const filtered = list.filter(uni => {
+                const matchText = uni.nameEN.toLowerCase().includes(query) || 
+                                  uni.nameKH.includes(query) || 
+                                  uni.skillsEN.toLowerCase().includes(query) ||
+                                  uni.skillsKH.includes(query);
+                
+                // UPDATED: Filter by the new uni.location property (ត្រងតាមទីតាំងថ្មី)
+                const matchLocation = location === 'all' || uni.location === location;
+
+                const matchMajor = major === 'all' || uni.category === major || uni.skillsEN.includes(major);
+
+                return matchText && matchMajor && matchLocation;
+            });
+
+            renderUniversities(filtered);
+        }
+
+        // --- MODAL LOGIC ---
+
+        function openModal(id) {
+            const uni = universities.find(u => u.id === id);
+            if(!uni) return;
+
+            const skills = currentLang === 'kh' ? uni.skillsKH : uni.skillsEN;
+
+            document.getElementById('modalTitle').textContent = currentLang === 'kh' ? uni.nameKH : uni.nameEN;
+            document.getElementById('modalImg').src = uni.img;
+            document.getElementById('modalDesc').textContent = currentLang === 'kh' 
+                ? `នេះគឺជាគ្រឹះស្ថានឧត្តមសិក្សាកំពូលមួយដែលមានឯកទេសខាង ${skills}។` 
+                : `This is a premier higher education institution specializing in ${skills}.`;
+            
+            const skillsContainer = document.getElementById('modalSkills');
+            skillsContainer.innerHTML = skills.split(',').map(s => 
+                `<span class="bg-gray-100 text-gray-800 text-xs font-bold mr-2 px-2.5 py-0.5 rounded border border-gray-300">${s.trim()}</span>`
+            ).join('');
+
+            // DYNAMIC LOCATION RENDERED HERE (បង្ហាញទីតាំង)
+            document.getElementById('modalLocation').textContent = uni.location;
+
+            document.getElementById('modalWebLink').href = uni.website;
+            document.getElementById('modalFbLink').href = uni.link;
+            document.getElementById('modalMapLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(uni.nameEN + " " + uni.location + " Cambodia")}`;
+
+            document.getElementById('scholarshipContainer').classList.add('hidden');
+            document.getElementById('btnScholarshipText').textContent = currentLang === 'kh' ? '▼ បង្ហាញអាហារូបករណ៍' : '▼ Show Scholarships';
+
+            document.getElementById('scholarshipList').innerHTML = `<li>${uni.scholarship}</li>`;
+            document.getElementById('scholarshipLimit').textContent = (currentLang === 'kh' ? "ចំនួនកំណត់: " : "Limit: ") + uni.limit;
+
+            modal.classList.remove('hidden-modal', 'opacity-0', 'pointer-events-none');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden-modal', 'opacity-0', 'pointer-events-none');
+        }
+        
+        function toggleScholarships() {
+            const container = document.getElementById('scholarshipContainer');
+            const btnText = document.getElementById('btnScholarshipText');
+            const isHidden = container.classList.contains('hidden');
+
+            if (isHidden) {
+                container.classList.remove('hidden');
+                btnText.textContent = currentLang === 'kh' ? '▲ បិទអាហារូបករណ៍' : '▲ Hide Scholarships';
+            } else {
+                container.classList.add('hidden');
+                btnText.textContent = currentLang === 'kh' ? '▼ បិទអាហារូបករណ៍' : '▼ Show Scholarships';
+            }
+        }
+
+        // --- QUIZ LOGIC ---
+
+        function openQuiz() {
+            currentQuizIndex = 0;
+            quizScores = { Health: 0, Engineering: 0, Agriculture: 0, Business: 0, Law: 0 };
+            quizHistory = [];
+            
+            // 1. SHOW THE HIDDEN UI ELEMENTS (Progress Bar & Footer)
+            document.getElementById('quizProgressBarContainer').style.display = 'block';
+            document.getElementById('quizFooter').style.display = 'flex';
+            
+            // 2. RESTORE THE HTML STRUCTURE
+            const container = document.getElementById('quizContent');
+            container.innerHTML = `
+                <h2 id="questionText" class="text-2xl font-bold mb-8 text-gray-800 harvard-serif min-h-[80px] leading-relaxed"></h2>
+                <div class="space-y-3">
+                    <button onclick="handleAnswer('yes')" class="w-full p-4 text-left border rounded hover:bg-harvard hover:text-white transition group">
+                        <span class="font-bold mr-2 text-harvard group-hover:text-white">A.</span> <span class="font-bold" id="btnYesText"></span>
+                    </button>
+                    <button onclick="handleAnswer('no')" class="w-full p-4 text-left border rounded hover:bg-gray-800 hover:text-white transition">
+                        <span class="font-bold mr-2">B.</span> <span class="font-bold" id="btnNoText"></span>
+                    </button>
+                </div>
+            `;
+
+            quizModal.classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function closeQuiz() {
+            quizModal.classList.add('hidden');
+        }
+
+        function renderQuestion() {
+            const q = quizQuestions[currentQuizIndex];
+            const text = currentLang === 'kh' ? q.qKh : q.qEn;
+            
+            const qEl = document.getElementById('questionText');
+            if(qEl) qEl.textContent = `${currentQuizIndex + 1}. ${text}`;
+
+            const btnYes = document.getElementById('btnYesText');
+            const btnNo = document.getElementById('btnNoText');
+            
+            if(btnYes) btnYes.textContent = currentLang === 'kh' ? 'បាទ/ចាស ឬ ចូលចិត្ត' : 'Yes / Like';
+            if(btnNo) btnNo.textContent = currentLang === 'kh' ? 'ទេ ឬ មិនចូលចិត្ត' : 'No / Dislike';
+            
+            const percent = ((currentQuizIndex + 1) / 20) * 100;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('quizProgressText').textContent = `${currentQuizIndex + 1} / 20`;
+
+            document.getElementById('prevBtn').disabled = currentQuizIndex === 0;
+        }
+
+        function handleAnswer(type) {
+            const cat = quizQuestions[currentQuizIndex].cat;
+            quizHistory.push({ index: currentQuizIndex, type: type, cat: cat });
+
+            if(type === 'yes') {
+                quizScores[cat]++;
+            }
+
+            currentQuizIndex++;
+
+            if(currentQuizIndex < 20) {
+                renderQuestion();
+            } else {
+                showQuizResult();
+            }
+        }
+
+        function prevQuestion() {
+            if(currentQuizIndex > 0) {
+                const lastAction = quizHistory.pop();
+                currentQuizIndex--;
+                if(lastAction.type === 'yes') {
+                    quizScores[lastAction.cat]--;
+                }
+                renderQuestion();
+            }
+        }
+
+        function showQuizResult() {
+            let maxScore = -1;
+            let bestCat = '';
+            for (const [key, value] of Object.entries(quizScores)) {
+                if (value > maxScore) {
+                    maxScore = value;
+                    bestCat = key;
+                }
+            }
+
+            const recommended = universities.filter(u => u.category === bestCat || u.skillsEN.includes(bestCat));
+            const container = document.getElementById('quizContent');
+            const resultTitle = currentLang === 'kh' ? "លទ្ធផលតេស្តរបស់អ្នក" : "Your Quiz Result";
+            const resultMsg = currentLang === 'kh' 
+                ? `ជំនាញដែលសាកសមនឹងអ្នកគឺ៖ <strong>${bestCat}</strong>` 
+                : `The field most suitable for you is: <strong>${bestCat}</strong>`;
+
+            let recHtml = `<div class="grid grid-cols-1 gap-4 mt-4">`;
+            recommended.forEach(u => {
+                 recHtml += `
+                    <div class="flex items-center border p-3 rounded bg-white hover:bg-gray-50 transition">
+                        <img src="${u.img}" class="w-16 h-16 object-cover rounded mr-4 bg-gray-200">
+                        <div>
+                            <h4 class="font-bold text-harvard font-serif">${currentLang === 'kh' ? u.nameKH : u.nameEN}</h4>
+                            <a href="#" onclick="closeQuiz(); openModal(${u.id})" class="text-sm underline text-blue-600 font-bold">View Details</a>
+                        </div>
+                    </div>
+                 `;
+            });
+            recHtml += `</div>`;
+
+            // Overwrite content
+            container.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold harvard-serif mb-4 text-harvard">${resultTitle}</h2>
+                    <p class="text-xl mb-6 font-light">${resultMsg}</p>
+                    <div class="text-left bg-white p-4 rounded shadow-inner mb-6 max-h-60 overflow-y-auto border border-gray-200">
+                        <p class="font-bold mb-2 text-gray-500 uppercase text-xs">Recommended Universities:</p>
+                        ${recHtml}
+                    </div>
+                    <button onclick="openQuiz()" class="bg-black text-white px-6 py-3 rounded font-bold hover:bg-gray-800 transition shadow-lg">
+                        ${currentLang === 'kh' ? "ធ្វើតេស្តម្តងទៀត" : "Restart Quiz"}
+                    </button>
+                </div>
+            `;
+            
+            // Hide progress bar & footer in result view
+            document.getElementById('quizProgressBarContainer').style.display = 'none';
+            document.getElementById('quizFooter').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
